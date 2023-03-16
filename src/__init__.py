@@ -12,8 +12,9 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 import pymysql
 
-#Importing controllers
-from src.routes.user import user as user_controllers
+#Importing routes
+from src.routes.user import user as user_routes
+from src.routes.admin import admin as admin_routes
 
 #MySQL database credentials
 host = 'localhost:3306'
@@ -40,7 +41,8 @@ def create_app():
 app, db = create_app()
 #Defining routes
 
-app.register_blueprint(user_controllers, url_prefix='/user')
+app.register_blueprint(user_routes, url_prefix='/user')
+app.register_blueprint(admin_routes, url_prefix='/admin')
 # @app.before_first_request
 # def create_tables():
 #     db.create_all()
