@@ -2,18 +2,9 @@ from flask import Blueprint, request, jsonify, g
 import src.controllers.user as controller
 from src.middleware.auth import auth
 from src.middleware.body_check import validate_body
-from enum import Enum
+from src.utils.body_schema.user import Schema
 
 user = Blueprint('user', __name__)
-
-# Body shemes for validation
-class Schema(Enum):
-     CREATE = {"type": "object", "properties": {"user_name": {"type": "string"}, "email": {"type": "string"}, "password": {"type": "string"}}, "required": ["user_name", "email", "password"]}
-
-     LOGIN = {"type": "object", "properties": {"email": {"type": "string"}, "password": {"type": "string"}}, "required": ["email", "password"]}
-
-     PUT_EMAIL = {"type": "object", "properties": {"email": {"type": "string"}}, "required": ["email"]}
-
 
 @user.post('/create')
 @validate_body(Schema.CREATE.value)
