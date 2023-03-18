@@ -18,10 +18,11 @@ class User:
       id = models.login(email=self.email, password=self.password)
       payload_data = {'id': id, "exp": datetime.utcnow() + timedelta(hours=2)}
       token = jwt.encode(payload=payload_data, key='secret')
-      return token
+      return "Login with success!", token
 
    def get(self, id) -> dict:
-      return models.get_user_by_id(id)
+      user = models.get_user_by_id(id)
+      return {'id': user.id, 'name': user.name, 'email': user.email}
    
    def change_email(self, id) -> str:
       return models.change_user_email(id, self.email)

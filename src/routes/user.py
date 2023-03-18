@@ -1,102 +1,53 @@
 from flask import Blueprint, request, jsonify, g
 import src.controllers.user as controller
 from src.middleware.auth import auth
+from src.middleware.body_check import validate_body
+from enum import Enum
 
 user = Blueprint('user', __name__)
 
+# Body shemes for validation
+class Schema(Enum):
+     CREATE = {"type": "object", "properties": {"user_name": {"type": "string"}, "email": {"type": "string"}, "password": {"type": "string"}}, "required": ["user_name", "email", "password"]}
+
+     LOGIN = {"type": "object", "properties": {"email": {"type": "string"}, "password": {"type": "string"}}, "required": ["email", "password"]}
+
+     PUT_EMAIL = {"type": "object", "properties": {"email": {"type": "string"}}, "required": ["email"]}
+
+
 @user.post('/create')
+@validate_body(Schema.CREATE.value)
 def handle_create():
-    if request.is_json:
-        try:
-            data = request.json
-            response = controller.create_user(user_name=data['user_name'], email=data['email'], password=data['password'])
-
-            if response['type'] == 'error':
-                response = {'message': f'{response["message"]}', 'code': 'ERROR'}
-                return jsonify(response), 403
-            
-            response = {'message': f'{response["message"]}', 'code': 'SUCCESS'}
-            return jsonify(response), 200
-
-        except Exception as err:
-            response = {'message': f'{err}', 'code': 'ERROR'}
-            return jsonify(response), 500
-
-    else:
-        response = {'message': 'Data not in json format', 'code': 'DENIED'}
-        return jsonify(response), 404
+    data = request.json
+    response, code = controller.create_user(user_name=data['user_name'], email=data['email'], password=data['password'])
+    return jsonify(response), code
 
 @user.post('/login')
+@validate_body(Schema.LOGIN.value)
 def handle_login():
-    if request.is_json:
-        try:
-            data = request.json
-            response = controller.login(email=data['email'], password=data['password'])
-            response = {'token': f'{response}', 'code': 'SUCCESS'}
-            return jsonify(response), 200
-
-        except Exception as err:
-            response = {'message': f'{err}', 'code': 'ERROR'}
-            return jsonify(response), 500
-
-    else:
-        response = {'message': 'Data not in json format', 'code': 'DENIED'}
-        return jsonify(response), 404
+    data = request.json
+    response, code = controller.login(email=data['email'], password=data['password'])
+    return jsonify(response), code
 
 @user.get('/')
 @auth
 def handle_get():
     id = g.get('id')
-    try:
-        response = controller.get(id)
-        if response['type'] ==  'error':
-            response = {'message': f'{response["message"]}', 'code': 'ERROR'}
-            return jsonify(response), 403
-        
-        response = {'content': response['content'], 'code': 'SUCCESS'}
-        return jsonify(response), 200
-    
-    except Exception as err:
-            response = {'message': f'{err}', 'code': 'ERROR'}
-            return jsonify(response), 500
+    response, code = controller.get(id)
+    return jsonify(response), code
 
 @user.put('/email')
 @auth
+@validate_body(Schema.PUT_EMAIL.value)
 def handle_change_email():
-    if request.is_json:
-        try:
-            data = request.json
-            id = g.get('id')
-            response = controller.change_email(id=id, email=data['email'])
-
-            if response['type'] == 'error':
-                response = {'message': f'{response["message"]}', 'code': 'ERROR'}
-                return jsonify(response), 403
-            
-            response = {'message': f'{response["message"]}', 'code': 'SUCCESS'}
-            return jsonify(response), 200
-
-        except Exception as err:
-            response = {'message': f'{err}', 'code': 'ERROR'}
-            return jsonify(response), 500
-
-    else:
-        response = {'message': 'Data not in json format', 'code': 'DENIED'}
-        return jsonify(response), 400
+    data = request.json
+    id = g.get('id')
+    response, code = controller.change_email(id=id, email=data['email'])
+    return jsonify(response), code
 
 @user.delete('/delete')
 @auth
 def handle_delete_user():
     id = g.get('id')
-    try:
-        response = controller.delete_user(id)
-        if response['type'] ==  'error':
-            response = {'message': f'{response["message"]}', 'code': 'ERROR'}
-            return jsonify(response), 403
-        
-        response = {'message': response['message'], 'code': 'SUCCESS'}
-        return jsonify(response), 200
-    
-    except Exception as err:
-            response = {'message': f'{err}', 'code': 'ERROR'}
-            return jsonify(response), 500
+    response, code = controller.delete_user(id)
+    return jsonify(response), code

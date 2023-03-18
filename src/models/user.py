@@ -9,7 +9,7 @@ def create_user(user_name, email, password) -> bool:
         response = db.session.scalars(
             db.select(User).filter_by(email=email)).all()
         if response != []:
-            raise Exception(f"The email {email} is already in use")
+            raise NameError(f"The email {email} is already in use")
 
         password = str(password)
         password = password.encode('UTF_8')
@@ -28,7 +28,7 @@ def login(email, password) -> int:
         user = db.first_or_404(db.select(User).filter_by(email=email))
         if bcrypt.checkpw(str(password).encode('UTF_8'), str(user.password).encode('UTF_8')):
             return user.id
-        raise Exception("Incorrect password!")
+        raise NameError("Incorrect password!")
 
 
 def get_user_by_id(id) -> dict:
@@ -37,6 +37,7 @@ def get_user_by_id(id) -> dict:
 
     with app.app_context():
         response = db.first_or_404(db.select(User).filter_by(id=id))
+        return response
         return {'id': response.id, 'name': response.name, 'email': response.email}
 
 
@@ -48,12 +49,12 @@ def change_user_email(id, email) -> str:
 
         check = db.session.scalars(db.select(User).filter_by(email=email)).all()
         if check != []:
-            raise Exception('Email already in use')
+            raise NameError('Email already in use')
 
         user = db.session.scalars(db.select(User).filter_by(id=id)).one()
 
         if user.email == email:
-            raise Exception('Trying to change for the same email')
+            raise NameError('Trying to change for the same email')
 
         user.email = email
         db.session.commit()
