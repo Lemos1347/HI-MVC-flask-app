@@ -1,35 +1,22 @@
 import bcrypt
 
-
 def create_user(user_name, email, password) -> bool:
     from src import db, app
     from src.migrations.user import User
 
     with app.app_context():
-        response = db.session.scalars(
-            db.select(User).filter_by(email=email)).all()
-        if response != []:
-            raise NameError(f"The email {email} is already in use")
-
-        password = str(password)
-        password = password.encode('UTF_8')
-        password_crypt = bcrypt.hashpw(password, bcrypt.gensalt(10))
-        user = User(name=user_name, email=email, password=password_crypt)
+        user = User(name=user_name, email=email, password=password)
         db.session.add(user)
         db.session.commit()
         return True
 
-
-def login(email, password) -> int:
+def already_exists_by_email(email) -> bool:
     from src import db, app
     from src.migrations.user import User
 
     with app.app_context():
-        user = db.first_or_404(db.select(User).filter_by(email=email))
-        if bcrypt.checkpw(str(password).encode('UTF_8'), str(user.password).encode('UTF_8')):
-            return user.id
-        raise NameError("Incorrect password!")
-
+        db.first_or_404(db.select(User).filter_by(email=email))
+        return True
 
 def get_user_by_id(id) -> dict:
     from src import db, app
@@ -38,8 +25,14 @@ def get_user_by_id(id) -> dict:
     with app.app_context():
         response = db.first_or_404(db.select(User).filter_by(id=id))
         return response
-        return {'id': response.id, 'name': response.name, 'email': response.email}
 
+def get_user_by_email(email) -> dict:
+    from src import db, app
+    from src.migrations.user import User
+
+    with app.app_context():
+        response = db.first_or_404(db.select(User).filter_by(email=email))
+        return response
 
 def change_user_email(id, email) -> str:
     from src import db, app
